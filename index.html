@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#22456b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>100チェック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ai:#22456b; --ai-deep:#16304d; --ai-light:#3a6091;
+  --cream:#f5f1e6; --cream-dark:#eae3d2; --paper:#fdfbf5;
+  --gold:#b8963f; --gold-light:#d9c07a;
+  --ink:#2a2b30; --ink-light:#6d6e75;
+  --line:#d8d0bc; --danger:#a5453c;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  background:var(--cream); color:var(--ink);
+  font-size:15px; line-height:1.6;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+h1,h2,h3,.serif{font-family:'Shippori Mincho',serif}
+
+/* ── ヘッダー ── */
+header{
+  background:var(--ai); color:var(--cream);
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+  display:flex; align-items:center; gap:10px;
+  position:sticky; top:0; z-index:50;
+  box-shadow:0 2px 8px rgba(22,48,77,.25);
+}
+header h1{font-size:19px; font-weight:700; letter-spacing:.08em; flex:1;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+header h1 .u{border-bottom:1px dashed rgba(245,241,230,.45); padding-bottom:1px}
+.icon-btn{
+  background:none; border:none; color:var(--cream); font-size:21px;
+  width:38px; height:38px; border-radius:8px; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:active{background:rgba(255,255,255,.15)}
+
+/* ── タブ ── */
+.tabs-wrap{
+  background:var(--ai-deep); display:flex; align-items:stretch;
+  position:sticky; top:calc(58px + env(safe-area-inset-top)); z-index:49;
+}
+.tabs{flex:1; display:flex; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex-shrink:0; padding:10px 16px 8px; color:rgba(245,241,230,.65);
+  font-size:14px; border:none; background:none; cursor:pointer;
+  border-bottom:3px solid transparent; font-family:'Shippori Mincho',serif; font-weight:600;
+  letter-spacing:.05em; white-space:nowrap;
+}
+.tab.on{color:var(--cream); border-bottom-color:var(--gold)}
+.tab-edit-btn{
+  flex-shrink:0; background:none; border:none; border-left:1px solid rgba(245,241,230,.15);
+  color:rgba(245,241,230,.7); font-size:13px; padding:0 13px; cursor:pointer;
+}
+
+/* ── 進捗（百マス）── */
+.progress-card{
+  margin:14px 14px 0; background:var(--paper); border:1px solid var(--line);
+  border-radius:12px; padding:14px 16px;
+}
+.progress-head{display:flex; align-items:baseline; gap:8px; margin-bottom:10px}
+.progress-num{font-family:'Shippori Mincho',serif; font-size:30px; font-weight:800; color:var(--ai); line-height:1}
+.progress-num small{font-size:15px; font-weight:600; color:var(--ink-light)}
+.progress-label{font-size:12px; color:var(--ink-light); margin-left:auto}
+.masu-grid{
+  display:grid; grid-template-columns:repeat(10,1fr); gap:3px;
+}
+.masu{
+  aspect-ratio:1; border:1px solid var(--line); border-radius:2px;
+  background:var(--cream); transition:background .3s,border-color .3s;
+}
+.masu.filled{background:var(--gold); border-color:var(--gold)}
+.masu.exists{border-color:#c8bfa6}
+.masu-over{font-size:11px; color:var(--ink-light); text-align:right; margin-top:5px}
+
+/* ── ツールバー ── */
+.toolbar{display:flex; gap:8px; margin:12px 14px 0; align-items:center}
+.search-box{
+  flex:1; display:flex; align-items:center; gap:6px;
+  background:var(--paper); border:1px solid var(--line); border-radius:20px; padding:7px 13px;
+}
+.search-box input{border:none; background:none; outline:none; flex:1; font-size:14px; font-family:inherit; min-width:0}
+.filter-btn{
+  flex-shrink:0; background:var(--paper); border:1px solid var(--line); border-radius:20px;
+  padding:7px 13px; font-size:13px; color:var(--ink-light); cursor:pointer; font-family:inherit;
+}
+.filter-btn.on{background:var(--ai); color:var(--cream); border-color:var(--ai)}
+
+/* ── 項目リスト ── */
+.items{margin:12px 14px; display:flex; flex-direction:column; gap:7px}
+.item{
+  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  overflow:hidden;
+}
+.item.dragging{opacity:.55; border-color:var(--gold); box-shadow:0 4px 14px rgba(34,69,107,.25)}
+.item-row{display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer}
+.item-num{
+  flex-shrink:0; font-family:'Shippori Mincho',serif; font-weight:700; font-size:13px;
+  color:var(--ai-light); min-width:26px; text-align:right;
+}
+.item-check{
+  flex-shrink:0; width:24px; height:24px; border:2px solid var(--ai-light); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  color:transparent; font-size:14px; transition:all .15s; background:var(--paper);
+}
+.item-check.on{background:var(--gold); border-color:var(--gold); color:#fff}
+.item-text{flex:1; font-size:15px; word-break:break-word}
+.item.done .item-text{color:var(--ink-light); text-decoration:line-through; text-decoration-color:var(--gold)}
+.item-badges{flex-shrink:0; font-size:11px; color:var(--ink-light); display:flex; gap:4px}
+.item-arrow{flex-shrink:0; color:var(--ink-light); font-size:12px; transition:transform .2s}
+.item.open .item-arrow{transform:rotate(90deg)}
+
+/* ── 詳細パネル（折りたたみ）── */
+.item-detail{display:none; border-top:1px dashed var(--line); padding:12px 14px; background:#fbf8ef}
+.item.open .item-detail{display:block}
+.detail-label{font-size:11px; color:var(--ai); font-weight:700; letter-spacing:.1em; margin:10px 0 5px}
+.detail-label:first-child{margin-top:0}
+.memo-area{
+  width:100%; border:1px solid var(--line); border-radius:8px; padding:9px 11px;
+  font-size:14px; font-family:inherit; background:var(--paper); resize:vertical; min-height:64px; outline:none;
+}
+.memo-area:focus{border-color:var(--ai-light)}
+.thumbs{display:flex; flex-wrap:wrap; gap:7px}
+.thumb{position:relative; width:76px; height:76px; border-radius:8px; overflow:hidden; border:1px solid var(--line)}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.thumb .rm{
+  position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%;
+  background:rgba(42,43,48,.75); color:#fff; border:none; font-size:11px; cursor:pointer; line-height:1;
+}
+.attach-btn{
+  background:var(--paper); border:1px dashed var(--ai-light); color:var(--ai); border-radius:8px;
+  padding:7px 13px; font-size:13px; cursor:pointer; font-family:inherit;
+}
+.link-row{
+  display:flex; align-items:center; gap:8px; background:var(--paper);
+  border:1px solid var(--line); border-radius:8px; padding:7px 11px; margin-bottom:6px;
+}
+.link-row a{flex:1; color:var(--ai); font-size:13px; word-break:break-all; text-decoration:none}
+.link-row .rm-link{background:none; border:none; color:var(--ink-light); font-size:15px; cursor:pointer; flex-shrink:0}
+.detail-foot{display:flex; justify-content:space-between; margin-top:13px; align-items:center}
+.txt-btn{background:none; border:none; font-size:13px; cursor:pointer; font-family:inherit; padding:5px 8px}
+.txt-btn.edit{color:var(--ai)}
+.txt-btn.danger{color:var(--danger)}
+
+/* ── 追加フォーム ── */
+.add-bar{
+  display:flex; gap:8px; margin:4px 14px 20px;
+}
+.add-bar input{
+  flex:1; border:1px solid var(--line); border-radius:10px; padding:11px 14px;
+  font-size:15px; font-family:inherit; background:var(--paper); outline:none; min-width:0;
+}
+.add-bar input:focus{border-color:var(--ai-light)}
+.add-bar button{
+  flex-shrink:0; background:var(--ai); color:var(--cream); border:none; border-radius:10px;
+  padding:0 19px; font-size:15px; cursor:pointer; font-family:inherit; font-weight:500;
+}
+
+/* ── 空表示 ── */
+.empty{
+  text-align:center; color:var(--ink-light); font-size:14px; padding:36px 20px;
+}
+.empty .serif{font-size:17px; color:var(--ai); margin-bottom:6px}
+
+/* ── モーダル ── */
+.overlay{
+  display:none; position:fixed; inset:0; background:rgba(22,48,77,.45); z-index:100;
+  align-items:flex-end; justify-content:center;
+}
+.overlay.show{display:flex}
+.modal{
+  background:var(--cream); width:100%; max-width:560px; max-height:86vh; overflow-y:auto;
+  border-radius:18px 18px 0 0; padding:18px 18px calc(24px + env(safe-area-inset-bottom));
+}
+.modal h2{font-size:17px; color:var(--ai); margin-bottom:14px; letter-spacing:.06em}
+.modal-close{float:right; background:none; border:none; font-size:19px; color:var(--ink-light); cursor:pointer; padding:2px 8px}
+.m-section{margin-bottom:18px}
+.m-label{font-size:12px; color:var(--ai); font-weight:700; letter-spacing:.08em; margin-bottom:6px}
+.m-input{
+  width:100%; border:1px solid var(--line); border-radius:9px; padding:10px 13px;
+  font-size:15px; font-family:inherit; background:var(--paper); outline:none;
+}
+.m-input:focus{border-color:var(--ai-light)}
+textarea.m-input{resize:vertical; min-height:100px}
+.m-btn{
+  width:100%; background:var(--ai); color:var(--cream); border:none; border-radius:10px;
+  padding:12px; font-size:15px; cursor:pointer; font-family:inherit; font-weight:500; margin-top:8px;
+}
+.m-btn.sub{background:var(--paper); color:var(--ai); border:1px solid var(--ai-light)}
+.m-btn.danger-btn{background:var(--paper); color:var(--danger); border:1px solid var(--danger)}
+.m-row2{display:flex; gap:8px}
+.m-row2 .m-btn{flex:1}
+/* タブ編集 */
+.tabedit-row{
+  display:flex; align-items:center; gap:7px; background:var(--paper);
+  border:1px solid var(--line); border-radius:9px; padding:8px 10px; margin-bottom:7px;
+}
+.tabedit-row input{flex:1; border:none; background:none; font-size:14px; font-family:inherit; outline:none; min-width:0}
+.mini-btn{
+  flex-shrink:0; background:var(--cream); border:1px solid var(--line); border-radius:6px;
+  width:30px; height:30px; font-size:13px; cursor:pointer; color:var(--ink-light);
+}
+.mini-btn.chk.on{background:var(--gold); border-color:var(--gold); color:#fff}
+.mini-btn.del{color:var(--danger)}
+
+/* ── トースト ── */
+#toast{
+  position:fixed; left:50%; bottom:calc(30px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(20px);
+  background:var(--ai-deep); color:var(--cream); padding:10px 20px; border-radius:22px;
+  font-size:13px; opacity:0; pointer-events:none; transition:all .25s; z-index:200;
+  max-width:86%; text-align:center;
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+/* ── ローディング ── */
+#loading{
+  position:fixed; inset:0; background:rgba(245,241,230,.82); z-index:150;
+  display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+}
+#loading.show{display:flex}
+.spin{
+  width:34px; height:34px; border:3px solid var(--line); border-top-color:var(--ai);
+  border-radius:50%; animation:sp 1s linear infinite;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+#loading p{font-size:13px; color:var(--ai)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="appTitle" onclick="openSettings()"><span class="u">100チェック</span></h1>
+  <button class="icon-btn" onclick="openBulkAdd()" aria-label="一括追加">≡＋</button>
+  <button class="icon-btn" onclick="openSettings()" aria-label="設定">⚙</button>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs" id="tabs"></div>
+  <button class="tab-edit-btn" onclick="openTabEdit()">✎ タブ</button>
+</div>
+
+<div id="progressCard" class="progress-card" style="display:none">
+  <div class="progress-head">
+    <div class="progress-num"><span id="pDone">0</span><small> / <span id="pTotal">100</span></small></div>
+    <div class="progress-label" id="pLabel"></div>
+  </div>
+  <div class="masu-grid" id="masuGrid"></div>
+  <div class="masu-over" id="masuOver" style="display:none"></div>
+</div>
+
+<div class="toolbar">
+  <div class="search-box">🔍<input id="searchInput" placeholder="このタブ内を検索" oninput="renderItems()"></div>
+  <button class="filter-btn" id="filterBtn" onclick="toggleFilter()">未完了</button>
+</div>
+
+<div class="items" id="itemList"></div>
+
+<div class="add-bar">
+  <input id="newItemInput" placeholder="項目を追加..." onkeydown="if(event.key==='Enter')addItem()">
+  <button onclick="addItem()">追加</button>
+</div>
+
+<!-- 設定モーダル -->
+<div class="overlay" id="settingsOverlay" onclick="if(event.target===this)closeModal('settingsOverlay')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('settingsOverlay')">✕</button>
+    <h2>設定</h2>
+    <div class="m-section">
+      <div class="m-label">ノート名</div>
+      <input class="m-input" id="titleInput" placeholder="100チェック">
+      <button class="m-btn" onclick="saveTitle()">ノート名を保存</button>
+    </div>
+    <div class="m-section">
+      <div class="m-label">エクスポート</div>
+      <div class="m-row2">
+        <button class="m-btn sub" onclick="exportJSON()">JSON</button>
+        <button class="m-btn sub" onclick="exportCSV()">CSV</button>
+      </div>
+    </div>
+    <div class="m-section">
+      <div class="m-label">インポート（既存データは消えません・IDで統合）</div>
+      <div class="m-row2">
+        <button class="m-btn sub" onclick="document.getElementById('importJsonFile').click()">JSON読込</button>
+        <button class="m-btn sub" onclick="document.getElementById('importCsvFile').click()">CSV読込</button>
+      </div>
+      <input type="file" id="importJsonFile" accept=".json,application/json" style="display:none" onchange="importJSONFile(this)">
+      <input type="file" id="importCsvFile" accept=".csv,text/csv" style="display:none" onchange="importCSVFile(this)">
+    </div>
+  </div>
+</div>
+
+<!-- タブ編集モーダル -->
+<div class="overlay" id="tabEditOverlay" onclick="if(event.target===this)closeModal('tabEditOverlay')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('tabEditOverlay')">✕</button>
+    <h2>タブ編集</h2>
+    <p style="font-size:12px;color:var(--ink-light);margin-bottom:10px">名前はその場で編集 → ✓保存。☑ボタンでチェックボックス表示のオンオフ。</p>
+    <div id="tabEditList"></div>
+    <button class="m-btn" onclick="addTab()">＋ タブを追加</button>
+  </div>
+</div>
+
+<!-- 一括追加モーダル -->
+<div class="overlay" id="bulkOverlay" onclick="if(event.target===this)closeModal('bulkOverlay')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('bulkOverlay')">✕</button>
+    <h2>一括追加</h2>
+    <p style="font-size:12px;color:var(--ink-light);margin-bottom:10px">1行＝1項目で、今開いているタブにまとめて追加します。</p>
+    <textarea class="m-input" id="bulkText" placeholder="親子丼を極める&#10;お蕎麦の名店をめぐる&#10;..."></textarea>
+    <button class="m-btn" onclick="bulkAdd()">まとめて追加</button>
+  </div>
+</div>
+
+<!-- 項目テキスト編集モーダル -->
+<div class="overlay" id="editOverlay" onclick="if(event.target===this)closeModal('editOverlay')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editOverlay')">✕</button>
+    <h2>項目を編集</h2>
+    <input class="m-input" id="editText">
+    <button class="m-btn" onclick="saveEditText()">保存</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="loading"><div class="spin"></div><p id="loadingMsg">読み込み中...</p></div>
+
+<script>
+// ============================================================
+// 設定：GASウェブアプリのURLをここに貼ってください
+// ============================================================
+var GAS_URL = 'ここにGASのウェブアプリURLを貼る';
+
+// ==== TRANSPORT START ====
+function apiCall(action, payload) {
+  var controller = { done: false };
+  var req = fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: action, payload: payload || {} })
+  }).then(function (res) { return res.json(); });
+  var timeout = new Promise(function (_, reject) {
+    setTimeout(function () { if (!controller.done) reject(new Error('通信タイムアウト（30秒）')); }, 30000);
+  });
+  return Promise.race([req, timeout]).then(function (r) {
+    controller.done = true;
+    if (!r.ok) throw new Error(r.error || 'エラーが発生しました');
+    return r.data;
+  });
+}
+// ==== TRANSPORT END ====
+
+// ── 状態 ────────────────────────────────────────────
+var STATE = { title: '', lists: [], items: [] };
+var currentListId = null;
+var filterUndone = false;
+var openItemIds = {};      // 折りたたみ状態
+var memoTimers = {};       // メモのdebounce
+var editingItemId = null;
+
+// ── 起動 ────────────────────────────────────────────
+async function init() {
+  showLoading('読み込み中...');
+  try {
+    STATE = await apiCall('getAll');
+    if (!STATE.lists.length) {
+      var l = await apiCall('addList', { name: 'マイリスト100' });
+      STATE.lists.push(l);
+    }
+    currentListId = STATE.lists[0].id;
+    applyTitle();
+    renderAll();
+  } catch (e) {
+    toast('読み込み失敗: ' + e.message);
+  }
+  hideLoading();
+}
+
+function applyTitle() {
+  var t = STATE.title || '100チェック';
+  document.getElementById('appTitle').innerHTML = '<span class="u"></span>';
+  document.getElementById('appTitle').querySelector('.u').textContent = t;
+  document.title = t;
+}
+
+// ── 描画 ────────────────────────────────────────────
+function renderAll() { renderTabs(); renderProgress(); renderItems(); }
+
+function currentList() {
+  for (var i = 0; i < STATE.lists.length; i++) {
+    if (STATE.lists[i].id === currentListId) return STATE.lists[i];
+  }
+  return null;
+}
+function itemsOfCurrent() {
+  return STATE.items
+    .filter(function (it) { return it.listId === currentListId; })
+    .sort(function (a, b) { return a.order - b.order; });
+}
+
+function renderTabs() {
+  var html = '';
+  STATE.lists.forEach(function (l) {
+    html += '<button class="tab' + (l.id === currentListId ? ' on' : '') + '" data-tabid="' + l.id + '"></button>';
+  });
+  var el = document.getElementById('tabs');
+  el.innerHTML = html;
+  var btns = el.querySelectorAll('.tab');
+  STATE.lists.forEach(function (l, i) {
+    btns[i].textContent = l.name || '無題';
+    btns[i].onclick = function () { switchTab(l.id); };
+  });
+}
+
+function switchTab(id) {
+  currentListId = id;
+  document.getElementById('searchInput').value = '';
+  renderAll();
+}
+
+function renderProgress() {
+  var list = currentList();
+  var card = document.getElementById('progressCard');
+  if (!list || !list.showCheck) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  var items = itemsOfCurrent();
+  var done = items.filter(function (i) { return i.checked; }).length;
+  document.getElementById('pDone').textContent = done;
+  document.getElementById('pTotal').textContent = Math.max(items.length, 100) === 100 ? 100 : items.length;
+  document.getElementById('pLabel').textContent = list.name || '';
+
+  var grid = document.getElementById('masuGrid');
+  var cells = '';
+  for (var i = 0; i < 100; i++) {
+    var cls = 'masu';
+    if (i < items.length) {
+      cls += ' exists';
+      if (items[i].checked) cls += ' filled';
+    }
+    cells += '<div class="' + cls + '"></div>';
+  }
+  grid.innerHTML = cells;
+
+  var over = document.getElementById('masuOver');
+  if (items.length > 100) {
+    over.style.display = 'block';
+    over.textContent = '101件目以降: ' + (items.length - 100) + '件（グリッドは先頭100件を表示）';
+  } else {
+    over.style.display = 'none';
+  }
+}
+
+function renderItems() {
+  var list = currentList();
+  var wrap = document.getElementById('itemList');
+  if (!list) { wrap.innerHTML = ''; return; }
+
+  var q = document.getElementById('searchInput').value.trim().toLowerCase();
+  var items = itemsOfCurrent();
+  var showCheck = list.showCheck;
+
+  var visible = items.filter(function (it) {
+    if (filterUndone && showCheck && it.checked) return false;
+    if (q && it.text.toLowerCase().indexOf(q) < 0 && it.memo.toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+
+  if (!visible.length) {
+    wrap.innerHTML = '<div class="empty"><div class="serif">' +
+      (items.length ? '該当する項目がありません' : 'まだ項目がありません') +
+      '</div>' + (items.length ? '' : '下の入力欄から、一つずつ書き足していきましょう') + '</div>';
+    return;
+  }
+
+  var html = '';
+  visible.forEach(function (it) {
+    var num = items.indexOf(it) + 1;
+    var open = !!openItemIds[it.id];
+    var badges = '';
+    if (it.memo) badges += '<span>📝</span>';
+    if (it.images.length) badges += '<span>🖼' + it.images.length + '</span>';
+    if (it.links.length) badges += '<span>🔗' + it.links.length + '</span>';
+    html +=
+      '<div class="item' + (showCheck && it.checked ? ' done' : '') + (open ? ' open' : '') + '" data-id="' + it.id + '">' +
+        '<div class="item-row">' +
+          '<div class="item-num">' + num + '</div>' +
+          (showCheck ? '<div class="item-check' + (it.checked ? ' on' : '') + '">✓</div>' : '') +
+          '<div class="item-text"></div>' +
+          '<div class="item-badges">' + badges + '</div>' +
+          '<div class="item-arrow">▶</div>' +
+        '</div>' +
+        '<div class="item-detail">' + (open ? detailHtml(it) : '') + '</div>' +
+      '</div>';
+  });
+  wrap.innerHTML = html;
+
+  // テキスト・イベントを安全に設定
+  var nodes = wrap.querySelectorAll('.item');
+  visible.forEach(function (it, i) {
+    var node = nodes[i];
+    node.querySelector('.item-text').textContent = it.text;
+    var chk = node.querySelector('.item-check');
+    if (chk) chk.onclick = function (ev) { ev.stopPropagation(); toggleCheck(it.id); };
+    node.querySelector('.item-row').onclick = function () { toggleOpen(it.id); };
+    attachLongPress(node, it.id);
+    if (openItemIds[it.id]) bindDetail(node, it);
+  });
+}
+
+function detailHtml(it) {
+  var imgs = '';
+  it.images.forEach(function (im, i) {
+    imgs += '<div class="thumb"><img src="' + escAttr(im.url) + '" alt=""><button class="rm" data-imgi="' + i + '">✕</button></div>';
+  });
+  var links = '';
+  it.links.forEach(function (lk, i) {
+    links += '<div class="link-row"><a href="' + escAttr(lk.url) + '" target="_blank" rel="noopener"></a><button class="rm-link" data-lki="' + i + '">✕</button></div>';
+  });
+  return '' +
+    '<div class="detail-label">メモ</div>' +
+    '<textarea class="memo-area" placeholder="自由にメモ..."></textarea>' +
+    '<div class="detail-label">画像</div>' +
+    '<div class="thumbs">' + imgs + '</div>' +
+    '<div style="margin-top:7px"><button class="attach-btn img-add">＋ 画像を追加</button>' +
+    '<input type="file" accept="image/*" style="display:none" class="img-file"></div>' +
+    '<div class="detail-label">動画・リンク（URL添付）</div>' +
+    '<div class="links-box">' + links + '</div>' +
+    '<button class="attach-btn link-add">＋ URLを追加</button>' +
+    '<div class="detail-foot">' +
+      '<button class="txt-btn edit">✎ テキスト編集</button>' +
+      '<button class="txt-btn danger">🗑 この項目を削除</button>' +
+    '</div>';
+}
+
+function bindDetail(node, it) {
+  var memo = node.querySelector('.memo-area');
+  memo.value = it.memo;
+  memo.oninput = function () {
+    it.memo = memo.value;
+    clearTimeout(memoTimers[it.id]);
+    memoTimers[it.id] = setTimeout(function () {
+      apiCall('updateItem', { id: it.id, memo: it.memo })
+        .then(function(){ renderBadgesOnly(); })
+        .catch(function (e) { toast('メモ保存失敗: ' + e.message); });
+    }, 800);
+  };
+  memo.onblur = function () {
+    clearTimeout(memoTimers[it.id]);
+    apiCall('updateItem', { id: it.id, memo: it.memo }).catch(function (e) { toast('メモ保存失敗: ' + e.message); });
+  };
+
+  // リンクテキスト設定
+  var linkAs = node.querySelectorAll('.link-row a');
+  it.links.forEach(function (lk, i) { if (linkAs[i]) linkAs[i].textContent = lk.title || lk.url; });
+
+  node.querySelectorAll('.rm').forEach(function (b) {
+    b.onclick = function (ev) {
+      ev.stopPropagation();
+      if (!confirm('この画像の添付を外しますか？（Drive上のファイルは残ります）')) return;
+      it.images.splice(Number(b.dataset.imgi), 1);
+      apiCall('updateItem', { id: it.id, images: it.images })
+        .then(function () { renderItems(); renderProgress(); })
+        .catch(function (e) { toast('失敗: ' + e.message); });
+    };
+  });
+  node.querySelectorAll('.rm-link').forEach(function (b) {
+    b.onclick = function (ev) {
+      ev.stopPropagation();
+      if (!confirm('このURLを外しますか？')) return;
+      it.links.splice(Number(b.dataset.lki), 1);
+      apiCall('updateItem', { id: it.id, links: it.links })
+        .then(function () { renderItems(); })
+        .catch(function (e) { toast('失敗: ' + e.message); });
+    };
+  });
+
+  var file = node.querySelector('.img-file');
+  node.querySelector('.img-add').onclick = function () { file.click(); };
+  file.onchange = function () {
+    if (!file.files || !file.files[0]) return;
+    uploadImage(it, file.files[0]);
+  };
+
+  node.querySelector('.link-add').onclick = function () {
+    var url = prompt('URLを入力（YouTube・Drive動画などOK）');
+    if (!url) return;
+    var title = prompt('表示名（省略可）') || '';
+    it.links.push({ url: url.trim(), title: title.trim() });
+    apiCall('updateItem', { id: it.id, links: it.links })
+      .then(function () { renderItems(); })
+      .catch(function (e) { toast('失敗: ' + e.message); });
+  };
+
+  node.querySelector('.txt-btn.edit').onclick = function () {
+    editingItemId = it.id;
+    document.getElementById('editText').value = it.text;
+    openModal('editOverlay');
+  };
+  node.querySelector('.txt-btn.danger').onclick = function () {
+    if (!confirm('「' + it.text + '」を削除しますか？')) return;
+    apiCall('deleteItem', { id: it.id }).then(function () {
+      STATE.items = STATE.items.filter(function (x) { return x.id !== it.id; });
+      renderAll(); toast('削除しました');
+    }).catch(function (e) { toast('削除失敗: ' + e.message); });
+  };
+}
+
+function renderBadgesOnly(){ /* メモ入力中の再描画を避けるためバッジは次回描画で更新 */ }
+
+function toggleOpen(id) {
+  openItemIds[id] = !openItemIds[id];
+  renderItems();
+}
+
+// ── 操作 ────────────────────────────────────────────
+function toggleCheck(id) {
+  var it = STATE.items.find(function (x) { return x.id === id; });
+  if (!it) return;
+  it.checked = !it.checked;
+  renderItems(); renderProgress();
+  apiCall('updateItem', { id: id, checked: it.checked }).catch(function (e) {
+    it.checked = !it.checked;
+    renderItems(); renderProgress();
+    toast('保存失敗: ' + e.message);
+  });
+}
+
+function addItem() {
+  var input = document.getElementById('newItemInput');
+  var text = input.value.trim();
+  if (!text || !currentListId) return;
+  input.value = '';
+  apiCall('addItems', { listId: currentListId, texts: [text] }).then(function (r) {
+    STATE.items = STATE.items.concat(r.items);
+    renderAll();
+  }).catch(function (e) { toast('追加失敗: ' + e.message); input.value = text; });
+}
+
+function openBulkAdd() { document.getElementById('bulkText').value = ''; openModal('bulkOverlay'); }
+function bulkAdd() {
+  var lines = document.getElementById('bulkText').value.split('\n')
+    .map(function (l) { return l.trim(); }).filter(Boolean);
+  if (!lines.length || !currentListId) return;
+  closeModal('bulkOverlay');
+  showLoading('追加中...');
+  apiCall('addItems', { listId: currentListId, texts: lines }).then(function (r) {
+    STATE.items = STATE.items.concat(r.items);
+    renderAll(); hideLoading(); toast(r.items.length + '件追加しました');
+  }).catch(function (e) { hideLoading(); toast('追加失敗: ' + e.message); });
+}
+
+function saveEditText() {
+  var text = document.getElementById('editText').value.trim();
+  if (!text || !editingItemId) return;
+  var it = STATE.items.find(function (x) { return x.id === editingItemId; });
+  closeModal('editOverlay');
+  apiCall('updateItem', { id: editingItemId, text: text }).then(function () {
+    if (it) it.text = text;
+    renderItems(); toast('保存しました');
+  }).catch(function (e) { toast('保存失敗: ' + e.message); });
+}
+
+function toggleFilter() {
+  filterUndone = !filterUndone;
+  document.getElementById('filterBtn').classList.toggle('on', filterUndone);
+  renderItems();
+}
+
+// ── 画像アップロード ────────────────────────────────
+function uploadImage(it, fileObj) {
+  showLoading('画像アップロード中...');
+  compressImage(fileObj, 1280, 0.82).then(function (dataUrl) {
+    return apiCall('uploadImage', { base64: dataUrl, name: fileObj.name || ('img_' + Date.now() + '.jpg') });
+  }).then(function (r) {
+    it.images.push({ url: r.url, viewUrl: r.viewUrl, fileId: r.fileId });
+    return apiCall('updateItem', { id: it.id, images: it.images });
+  }).then(function () {
+    hideLoading(); renderItems(); toast('画像を追加しました');
+  }).catch(function (e) { hideLoading(); toast('アップロード失敗: ' + e.message); });
+}
+
+function compressImage(file, maxW, quality) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = function () { reject(new Error('画像を読み込めませんでした')); };
+      img.src = reader.result;
+    };
+    reader.onerror = function () { reject(new Error('ファイルを読み込めませんでした')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── ロングプレスD&D並び替え ─────────────────────────
+var drag = null;
+function attachLongPress(node, itemId) {
+  var timer = null;
+  node.addEventListener('touchstart', function (e) {
+    if (e.target.closest('.item-detail') || e.target.closest('.item-check')) return;
+    timer = setTimeout(function () {
+      startDrag(node, itemId, e.touches[0].clientY);
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 450);
+  }, { passive: true });
+  node.addEventListener('touchmove', function (e) {
+    if (drag) { e.preventDefault(); moveDrag(e.touches[0].clientY); }
+    else if (timer) { clearTimeout(timer); timer = null; }
+  }, { passive: false });
+  node.addEventListener('touchend', function () {
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (drag) endDrag();
+  });
+  // PC用（管理）
+  node.addEventListener('mousedown', function (e) {
+    if (e.target.closest('.item-detail') || e.target.closest('.item-check')) return;
+    timer = setTimeout(function () { startDrag(node, itemId, e.clientY); }, 450);
+    var mm = function (ev) { if (drag) moveDrag(ev.clientY); };
+    var mu = function () {
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (drag) endDrag();
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+    };
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', mu);
+  });
+}
+function startDrag(node, itemId, y) {
+  drag = { id: itemId, node: node, y: y };
+  node.classList.add('dragging');
+}
+function moveDrag(y) {
+  if (!drag) return;
+  var wrap = document.getElementById('itemList');
+  var nodes = Array.prototype.slice.call(wrap.querySelectorAll('.item'));
+  var target = null;
+  nodes.forEach(function (n) {
+    if (n === drag.node) return;
+    var r = n.getBoundingClientRect();
+    if (y > r.top && y < r.bottom) target = n;
+  });
+  if (target) {
+    var r = target.getBoundingClientRect();
+    if (y < r.top + r.height / 2) wrap.insertBefore(drag.node, target);
+    else wrap.insertBefore(drag.node, target.nextSibling);
+  }
+}
+function endDrag() {
+  if (!drag) return;
+  drag.node.classList.remove('dragging');
+  var wrap = document.getElementById('itemList');
+  var newOrderIds = Array.prototype.slice.call(wrap.querySelectorAll('.item'))
+    .map(function (n) { return n.dataset.id; });
+  drag = null;
+
+  // 検索・フィルター中の並び替えは全体順序が壊れるため保存しない
+  var q = document.getElementById('searchInput').value.trim();
+  if (q || filterUndone) { toast('検索・フィルター中は並び替えできません'); renderItems(); return; }
+
+  var byId = {};
+  STATE.items.forEach(function (it) { byId[it.id] = it; });
+  newOrderIds.forEach(function (id, i) { if (byId[id]) byId[id].order = i + 1; });
+  renderItems(); renderProgress();
+  apiCall('reorderItems', { ids: newOrderIds }).then(function () {
+    toast('並び替えました');
+  }).catch(function (e) { toast('並び替え保存失敗: ' + e.message); });
+}
+
+// ── タブ編集 ────────────────────────────────────────
+function openTabEdit() { renderTabEdit(); openModal('tabEditOverlay'); }
+
+function renderTabEdit() {
+  var box = document.getElementById('tabEditList');
+  var html = '';
+  STATE.lists.forEach(function (l, i) {
+    html +=
+      '<div class="tabedit-row" data-id="' + l.id + '">' +
+        '<input value="">' +
+        '<button class="mini-btn chk' + (l.showCheck ? ' on' : '') + '" title="チェックボックス表示">☑</button>' +
+        '<button class="mini-btn up">▲</button>' +
+        '<button class="mini-btn dn">▼</button>' +
+        '<button class="mini-btn save">✓</button>' +
+        '<button class="mini-btn del">✕</button>' +
+      '</div>';
+  });
+  box.innerHTML = html;
+  var rows = box.querySelectorAll('.tabedit-row');
+  STATE.lists.forEach(function (l, i) {
+    var row = rows[i];
+    var input = row.querySelector('input');
+    input.value = l.name;
+    row.querySelector('.save').onclick = function () {
+      var name = input.value.trim();
+      if (!name) { toast('名前を入力してください'); return; }
+      apiCall('updateList', { id: l.id, name: name }).then(function () {
+        l.name = name; renderTabs(); renderProgress(); toast('保存しました');
+      }).catch(function (e) { toast('失敗: ' + e.message); });
+    };
+    row.querySelector('.chk').onclick = function () {
+      var next = !l.showCheck;
+      apiCall('updateList', { id: l.id, showCheck: next }).then(function () {
+        l.showCheck = next; renderTabEdit(); renderAll();
+      }).catch(function (e) { toast('失敗: ' + e.message); });
+    };
+    row.querySelector('.up').onclick = function () { moveTab(i, -1); };
+    row.querySelector('.dn').onclick = function () { moveTab(i, 1); };
+    row.querySelector('.del').onclick = function () {
+      var cnt = STATE.items.filter(function (it) { return it.listId === l.id; }).length;
+      if (!confirm('タブ「' + l.name + '」を削除しますか？\n中の項目 ' + cnt + ' 件も削除されます。')) return;
+      apiCall('deleteList', { id: l.id }).then(function () {
+        STATE.lists = STATE.lists.filter(function (x) { return x.id !== l.id; });
+        STATE.items = STATE.items.filter(function (x) { return x.listId !== l.id; });
+        if (currentListId === l.id) currentListId = STATE.lists.length ? STATE.lists[0].id : null;
+        renderTabEdit(); renderAll(); toast('削除しました');
+      }).catch(function (e) { toast('失敗: ' + e.message); });
+    };
+  });
+}
+
+function moveTab(i, dir) {
+  var j = i + dir;
+  if (j < 0 || j >= STATE.lists.length) return;
+  var tmp = STATE.lists[i]; STATE.lists[i] = STATE.lists[j]; STATE.lists[j] = tmp;
+  STATE.lists.forEach(function (l, k) { l.order = k + 1; });
+  renderTabEdit(); renderTabs();
+  apiCall('reorderLists', { ids: STATE.lists.map(function (l) { return l.id; }) })
+    .catch(function (e) { toast('並び順保存失敗: ' + e.message); });
+}
+
+function addTab() {
+  var name = prompt('新しいタブの名前', '');
+  if (name === null) return;
+  apiCall('addList', { name: name.trim() || '新しいタブ' }).then(function (l) {
+    STATE.lists.push(l);
+    renderTabEdit(); renderTabs();
+    toast('タブを追加しました');
+  }).catch(function (e) { toast('失敗: ' + e.message); });
+}
+
+// ── 設定 ────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('titleInput').value = STATE.title || '';
+  openModal('settingsOverlay');
+}
+function saveTitle() {
+  var t = document.getElementById('titleInput').value.trim();
+  apiCall('setTitle', { title: t }).then(function () {
+    STATE.title = t; applyTitle(); toast('保存しました');
+  }).catch(function (e) { toast('失敗: ' + e.message); });
+}
+
+// ── エクスポート ────────────────────────────────────
+function dl(filename, content, mime) {
+  var blob = new Blob([content], { type: mime });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+}
+function stamp() {
+  var d = new Date();
+  return d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2);
+}
+function exportJSON() {
+  var data = { version: 1, exportedAt: new Date().toISOString(), title: STATE.title, lists: STATE.lists, items: STATE.items };
+  dl('100チェック_' + stamp() + '.json', JSON.stringify(data, null, 2), 'application/json');
+  toast('JSONを書き出しました');
+}
+function csvCell(v) {
+  v = String(v == null ? '' : v);
+  if (/[",\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+function exportCSV() {
+  var listById = {};
+  STATE.lists.forEach(function (l) { listById[l.id] = l; });
+  var rows = [['itemId', 'listId', 'listName', 'showCheck', 'order', 'text', 'checked', 'memo', 'images', 'links', 'createdAt']];
+  STATE.items.forEach(function (it) {
+    var l = listById[it.listId] || {};
+    rows.push([it.id, it.listId, l.name || '', l.showCheck === false ? 'false' : 'true',
+      it.order, it.text, it.checked ? 'true' : 'false', it.memo,
+      JSON.stringify(it.images), JSON.stringify(it.links), it.createdAt]);
+  });
+  var csv = '\ufeff' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n');
+  dl('100チェック_' + stamp() + '.csv', csv, 'text/csv');
+  toast('CSVを書き出しました');
+}
+
+// ── インポート ──────────────────────────────────────
+function importJSONFile(input) {
+  var file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () {
+    try {
+      var data = JSON.parse(reader.result);
+      runImport(data.lists || [], data.items || []);
+    } catch (e) { toast('JSONの読み込みに失敗: ' + e.message); }
+  };
+  reader.readAsText(file);
+}
+
+function importCSVFile(input) {
+  var file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () {
+    try {
+      var rows = parseCSV(String(reader.result).replace(/^\ufeff/, ''));
+      if (rows.length < 2) { toast('データ行がありません'); return; }
+      var head = rows[0];
+      var col = {};
+      head.forEach(function (h, i) { col[h.trim()] = i; });
+      var listsById = {};
+      var items = [];
+      for (var i = 1; i < rows.length; i++) {
+        var r = rows[i];
+        if (!r.length || !r[col.itemId]) continue;
+        var listId = r[col.listId] || '';
+        if (listId && !listsById[listId]) {
+          listsById[listId] = { id: listId, name: r[col.listName] || '', showCheck: r[col.showCheck] !== 'false' };
+        }
+        items.push({
+          id: r[col.itemId],
+          listId: listId,
+          order: Number(r[col.order]) || undefined,
+          text: r[col.text] || '',
+          checked: r[col.checked] === 'true',
+          memo: r[col.memo] || '',
+          images: safeArr(r[col.images]),
+          links: safeArr(r[col.links]),
+          createdAt: r[col.createdAt] || ''
+        });
+      }
+      runImport(Object.keys(listsById).map(function (k) { return listsById[k]; }), items);
+    } catch (e) { toast('CSVの読み込みに失敗: ' + e.message); }
+  };
+  reader.readAsText(file);
+}
+
+function safeArr(v) {
+  if (!v) return [];
+  try { var a = JSON.parse(v); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+
+// 引用符・セル内改行対応CSVパーサ
+function parseCSV(text) {
+  var rows = [], row = [], cur = '', inQ = false;
+  for (var i = 0; i < text.length; i++) {
+    var ch = text[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else inQ = false;
+      } else cur += ch;
+    } else {
+      if (ch === '"') inQ = true;
+      else if (ch === ',') { row.push(cur); cur = ''; }
+      else if (ch === '\r') { /* skip */ }
+      else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+      else cur += ch;
+    }
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+
+function runImport(lists, items) {
+  if (!lists.length && !items.length) { toast('取り込むデータがありません'); return; }
+  if (!confirm('インポートします。\nリスト ' + lists.length + ' 件 / 項目 ' + items.length + ' 件\n（IDが同じものは統合・既存データは消えません）')) return;
+  closeModal('settingsOverlay');
+  showLoading('インポート中...');
+  // 項目は80件ずつ分割送信（GAS実行時間対策）
+  var chunks = [];
+  for (var i = 0; i < items.length; i += 80) chunks.push(items.slice(i, i + 80));
+  if (!chunks.length) chunks.push([]);
+  var total = { listsAdded: 0, listsUpdated: 0, itemsAdded: 0, itemsUpdated: 0 };
+  var p = Promise.resolve();
+  chunks.forEach(function (chunk, idx) {
+    p = p.then(function () {
+      document.getElementById('loadingMsg').textContent = 'インポート中... (' + (idx + 1) + '/' + chunks.length + ')';
+      return apiCall('importData', { lists: idx === 0 ? lists : [], items: chunk });
+    }).then(function (r) {
+      total.listsAdded += r.listsAdded; total.listsUpdated += r.listsUpdated;
+      total.itemsAdded += r.itemsAdded; total.itemsUpdated += r.itemsUpdated;
+    });
+  });
+  p.then(function () {
+    return apiCall('getAll');
+  }).then(function (data) {
+    STATE = data;
+    if (!currentListId || !STATE.lists.some(function (l) { return l.id === currentListId; })) {
+      currentListId = STATE.lists.length ? STATE.lists[0].id : null;
+    }
+    applyTitle(); renderAll(); hideLoading();
+    toast('完了: 追加 ' + total.itemsAdded + '件 / 統合 ' + total.itemsUpdated + '件');
+  }).catch(function (e) { hideLoading(); toast('インポート失敗: ' + e.message); });
+}
+
+// ── 共通UI ──────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function () { t.classList.remove('show'); }, 2600);
+}
+function showLoading(msg) {
+  document.getElementById('loadingMsg').textContent = msg || '読み込み中...';
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+// ==== PWA START ====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    try { navigator.serviceWorker.register('./sw.js').catch(function () {}); } catch (e) {}
+  });
+}
+// ==== PWA END ====
+
+init();
+</script>
+</body>
+</html>

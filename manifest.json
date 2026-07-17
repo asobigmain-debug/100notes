@@ -1,0 +1,15 @@
+{
+  "name": "100チェック",
+  "short_name": "100チェック",
+  "description": "100リストを一括管理するチェックノート",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f1e6",
+  "theme_color": "#22456b",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
